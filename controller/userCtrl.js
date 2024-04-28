@@ -2,6 +2,10 @@ const User = require('../models/userModels')
 const asyncHandler = require('express-async-handler')
 const generateToken = require('../config/jwtToken')
 const { validateMongodbId } = require('../utils/validateMongodbId')
+const generateRefreshToken = require('../config/refreshToken')
+
+
+
 
 
 
@@ -39,6 +43,14 @@ const loginUserCtrl = asyncHandler(async (req, res) => {
     const findUser = await User.findOne({ email });
     if (findUser && await findUser.isPasswordsMatched(password)) {
         console.log("send Successfully")
+        const refreshToken = await generateRefreshToken(findUser._id);
+        const updateUser = await User.findOneAndUpdate(findUser._id, {
+            refreshToken:refreshToken
+        },{new:true})
+        res.cookie('refreshToken',refreshToken,{
+            httpOnly:true,
+            maxAge:72*60*60*1000
+        })
         res.json(
             {
                 id: findUser._id,
@@ -152,7 +164,23 @@ const unblockUser = asyncHandler(async(req,res)=>{
     }
 })
 
+const handleRefreshToken = asyncHandler(async(req,res)=>{
+    const cookie = req.cookies;
+    console.log(cookie);
+    console.log(req.cookies)
+    if(!cookie.refreshToken){
+        throw new Error('No refresh token in cookies');
+        const refreshToken = cookie.refreshToken;
+        console.log(refreshToken)
+        const user = await User.findOne({refreshToken})
+        res.json(user)
+
+        
+    }
+
+})
 
 
 
-module.exports = { createUser, loginUserCtrl,updateaUser, getallUser, getaUser,deleteaUser,blockUser,unblockUser }
+
+module.exports = { createUser, loginUserCtrl,updateaUser, getallUser, getaUser,deleteaUser,blockUser,unblockUser,handleRefreshToken }

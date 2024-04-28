@@ -5,6 +5,7 @@ const env = require('dotenv').config()
 const PORT = process.env.PORT || 4000
 const authRoute = require('./routes/authRoute')
 const bodyParser = require('body-parser')
+const cookieParser = require('cookie-parser')
 const { notFound, errorHandler } = require('./middleware/errorHandler')
 
 
@@ -13,6 +14,8 @@ const { notFound, errorHandler } = require('./middleware/errorHandler')
 dbConnect()
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended:false}))
+app.use(cookieParser())
+
 
 app.get('/',(req,res)=>{
     res.send("Message from server side")
